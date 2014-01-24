@@ -5,6 +5,7 @@ import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import java.lang.management.ManagementFactory;
+import java.util.List;
 
 import javax.management.*;
 import javax.ws.rs.*;
@@ -14,20 +15,34 @@ import org.slf4j.*;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * Exposes MBeans with their attributes and meta data, but not (yet) notifications, operations, or constructors. Paths
+ * that refer to some meta data have path segment starting with a minus.
+ */
 @Path(MBEANS)
 public class MBeanBrowser {
     public static final String MBEANS = "mbeans";
 
+    private static final String BEAN_HELP = "" //
+            + "You have requested an MBean directly using matrix parameters.\n" //
+            + "To search for beans, use query parameters.\n" //
+            + "To list all possible attributes, append '-attributes' to the path.\n" //
+            + "To get the value of one attribute, append it's name to the path.\n" //
+            + "To get all meta data about the bean, append '-info' to the path.\n" //
+            + "To get the textual description of the bean, append '-description' to the path.\n" //
+    ;
+
+    private static final String NON_META = "[^-/][^/]*";
+
     private final Logger log = LoggerFactory.getLogger(MBeanBrowser.class);
 
     @javax.ws.rs.core.Context
-    private UriInfo context;
+    private UriInfo uri;
 
     MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
     @GET
-    public Response domains() throws JMException {
-        log.warn("list domains");
+    public Response getDomains() throws JMException {
         ImmutableList.Builder<String> out = ImmutableList.builder();
         for (String domain : server.getDomains()) {
             out.add(domain);
@@ -36,91 +51,127 @@ public class MBeanBrowser {
     }
 
     @GET
-    @Path("{domain}")
-    public Response names(@PathParam("domain") String domain) throws JMException {
+    @Produces(TEXT_PLAIN)
+    public Response getDomainsAsTextPlain() throws JMException {
+        StringBuilder out = new StringBuilder();
+        for (String domain : server.getDomains()) {
+            out.append(domain).append("\n");
+        }
+        return Response.ok(out.toString()).build();
+    }
+
+    @GET
+    @Path("{beanName}")
+    public Response queryBeanNames(@PathParam("beanName") PathSegment beanName) throws JMException {
+        if (!beanName.getMatrixParameters().isEmpty())
+            return Response.status(BAD_REQUEST).entity(BEAN_HELP).encoding(TEXT_PLAIN).build();
+        return Response.ok(queryDomains(beanName.getPath(), uri.getQueryParameters())).build();
+    }
+
+    private List<String> queryDomains(String domain, MultivaluedMap<String, String> queryParameters)
+            throws MalformedObjectNameException {
         ImmutableList.Builder<String> out = ImmutableList.builder();
-        ObjectName name = new ObjectName(domain + ":" + query());
+        String query = toMbeanQuery(queryParameters);
+        log.debug("query {} for mbeans: {}", domain, query);
+        ObjectName name = new ObjectName(domain + ":" + query);
         for (ObjectName objectName : server.queryNames(name, null)) {
             out.add(objectName.getKeyPropertyListString());
         }
-        return Response.ok(out.build()).build();
+        return out.build();
     }
 
-    private String query() {
-        MultivaluedMap<String, String> urlQuery = context.getQueryParameters();
+    private String toMbeanQuery(MultivaluedMap<String, String> urlQuery) {
+        log.debug("url query: {}", urlQuery);
         if (urlQuery.isEmpty())
             return "*";
         StringBuilder out = new StringBuilder();
         for (String key : urlQuery.keySet()) {
             if (out.length() > 0)
                 out.append(",");
-            out.append(key).append("=").append(urlQuery.getFirst(key));
-        }
-        return out.toString();
-    }
-
-    @GET
-    @Path("{domain}/{beanName}")
-    public Response object(@PathParam("domain") String domain, @PathParam("beanName") String beanName)
-            throws JMException {
-        MBeanInfo info = info(domain, beanName);
-
-        return Response.ok(info).build();
-    }
-
-    private MBeanInfo info(String domain, String beanName) throws MalformedObjectNameException, ReflectionException,
-            IntrospectionException, InstanceNotFoundException {
-        ObjectName objectName = ObjectName.getInstance(domain + ":" + beanName);
-        return server.getMBeanInfo(objectName);
-    }
-
-    @GET
-    @Path("{domain}/{beanName}/attributes")
-    public Response attributes(@PathParam("domain") String domain, @PathParam("beanName") String beanName)
-            throws JMException {
-        MBeanInfo info = info(domain, beanName);
-
-        return Response.ok(ImmutableList.copyOf(info.getAttributes())).build();
-    }
-
-    @GET
-    @Path("{domain}/{beanName}/attributes")
-    @Produces(TEXT_PLAIN)
-    public String attributeNamesAsText(@PathParam("domain") String domain, @PathParam("beanName") String beanName)
-            throws JMException {
-        MBeanInfo info = info(domain, beanName);
-
-        StringBuilder out = new StringBuilder();
-        for (MBeanAttributeInfo attribute : info.getAttributes()) {
-            out.append(attribute.getName()).append("\n");
-        }
-        return out.toString();
-    }
-
-    @GET
-    @Path("{domain}/{beanName}/attributes/{attributeName}")
-    public Response attributeValue(@PathParam("domain") String domain, @PathParam("beanName") String beanName,
-            @PathParam("attributeName") String attributeName) throws JMException {
-        ObjectName objectName = ObjectName.getInstance(domain + ":" + beanName);
-        MBeanInfo info = info(domain, beanName);
-        System.out.println("   -----> " + info.getClassName());
-        if ("[Ljavax.management.openmbean.CompositeData;".equals(info.getClassName())) {
-            return Response.ok("composite").build();
-        } else {
-            Object bean = server.getAttribute(objectName, attributeName);
-            return Response.ok(bean).build();
-        }
-    }
-
-    @GET
-    @Path("{domain}/{beanName}/attributes/{attributeName}/info")
-    public Response attribute(@PathParam("domain") String domain, @PathParam("beanName") String beanName,
-            @PathParam("attributeName") String attributeName) throws JMException {
-        for (MBeanAttributeInfo attribute : info(domain, beanName).getAttributes()) {
-            if (attributeName.equals(attribute.getName())) {
-                return Response.ok(attribute).build();
+            out.append(key);
+            String value = urlQuery.getFirst(key);
+            if (!isFullWildcard(key, value)) {
+                out.append("=").append(value);
             }
         }
-        return Response.status(NOT_FOUND).build();
+        return out.toString();
+    }
+
+    private boolean isFullWildcard(String key, String value) {
+        return "*".equals(key) && value.isEmpty();
+    }
+
+    @GET
+    @Path("{beanName}/-description")
+    public Response getBeanDescription(@PathParam("beanName") PathSegment beanName) throws JMException {
+        return Response.ok(beanInfo(beanName).getDescription()).build();
+    }
+
+    @GET
+    @Path("{beanName}/-attributes")
+    public Response getBeanAttributes(@PathParam("beanName") PathSegment beanName) throws JMException {
+        ImmutableList.Builder<String> out = ImmutableList.builder();
+        for (MBeanAttributeInfo attributeInfo : beanInfo(beanName).getAttributes()) {
+            out.add(attributeInfo.getName());
+        }
+        return Response.ok(out.build()).build();
+    }
+
+    @GET
+    @Path("{beanName}/-info")
+    public Response getBeanInfo(@PathParam("beanName") PathSegment beanName) throws JMException {
+        return Response.ok(beanInfo(beanName)).build();
+    }
+
+    @GET
+    @Path("{beanName}/{attributeName:" + NON_META + "}/-info")
+    public Response getAttributeInfo(@PathParam("beanName") PathSegment beanName,
+            @PathParam("attributeName") String attributeName) throws JMException {
+        MBeanInfo beanInfo = beanInfo(beanName);
+        log.debug("get info for attribute {} of {}", attributeName, beanName);
+        MBeanAttributeInfo attributeInfo = findAttributeInfo(beanName, attributeName, beanInfo);
+        if (attributeInfo == null)
+            return Response.status(NOT_FOUND).build();
+        return Response.ok(attributeInfo).build();
+    }
+
+    private MBeanAttributeInfo findAttributeInfo(PathSegment beanName, String attributeName, MBeanInfo beanInfo) {
+        for (MBeanAttributeInfo attributeInfo : beanInfo.getAttributes()) {
+            if (attributeName.equals(attributeInfo.getName())) {
+                return attributeInfo;
+            }
+        }
+        return null;
+    }
+
+    @GET
+    @Path("{beanName}/{attributeName:" + NON_META + "}")
+    public Response getBeanAttributeByName(@PathParam("beanName") PathSegment beanName,
+            @PathParam("attributeName") String attributeName) throws JMException {
+        Object value = server.getAttribute(beanName(beanName), attributeName);
+        return Response.ok(value).build();
+    }
+
+    private MBeanInfo beanInfo(PathSegment pathSegment) throws JMException {
+        ObjectName beanName = beanName(pathSegment);
+        log.debug("get bean info for " + beanName);
+        return server.getMBeanInfo(beanName);
+    }
+
+    private ObjectName beanName(PathSegment segment) throws MalformedObjectNameException {
+        StringBuilder beanName = new StringBuilder();
+        String domain = segment.getPath();
+        beanName.append(domain).append(":");
+        MultivaluedMap<String, String> matrix = segment.getMatrixParameters();
+        boolean first = true;
+        for (String key : matrix.keySet()) {
+            if (first) {
+                first = false;
+            } else {
+                beanName.append(",");
+            }
+            beanName.append(key).append("=").append(matrix.getFirst(key));
+        }
+        return ObjectName.getInstance(beanName.toString());
     }
 }
