@@ -7,8 +7,10 @@ import javax.naming.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.UriInfo;
 
-@Path("jndi")
+@Path(JndiBrowser.JNDI)
 public class JndiBrowser {
+    public static final String JNDI = "jndi";
+
     @javax.ws.rs.core.Context
     private UriInfo context;
 
