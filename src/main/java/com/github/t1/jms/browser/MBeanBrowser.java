@@ -1,13 +1,14 @@
 package com.github.t1.jms.browser;
 
 import static com.github.t1.jms.browser.MBeanBrowser.*;
+import static com.github.t1.jms.browser.RestTools.*;
 import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.Status.*;
 
 import java.lang.management.ManagementFactory;
-import java.util.List;
+import java.util.*;
 
 import javax.management.*;
+import javax.management.openmbean.CompositeData;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
@@ -47,7 +48,7 @@ public class MBeanBrowser {
         for (String domain : server.getDomains()) {
             out.add(domain);
         }
-        return Response.ok(out.build()).build();
+        return ok(out.build());
     }
 
     @GET
@@ -57,15 +58,15 @@ public class MBeanBrowser {
         for (String domain : server.getDomains()) {
             out.append(domain).append("\n");
         }
-        return Response.ok(out.toString()).build();
+        return ok(out.toString());
     }
 
     @GET
     @Path("{beanName}")
     public Response queryBeanNames(@PathParam("beanName") PathSegment beanName) throws JMException {
         if (!beanName.getMatrixParameters().isEmpty())
-            return Response.status(BAD_REQUEST).entity(BEAN_HELP).encoding(TEXT_PLAIN).build();
-        return Response.ok(queryDomains(beanName.getPath(), uri.getQueryParameters())).build();
+            return badRequest(BEAN_HELP);
+        return ok(queryDomains(beanName.getPath(), uri.getQueryParameters()));
     }
 
     private List<String> queryDomains(String domain, MultivaluedMap<String, String> queryParameters)
@@ -104,52 +105,7 @@ public class MBeanBrowser {
     @GET
     @Path("{beanName}/-description")
     public Response getBeanDescription(@PathParam("beanName") PathSegment beanName) throws JMException {
-        return Response.ok(beanInfo(beanName).getDescription()).build();
-    }
-
-    @GET
-    @Path("{beanName}/-attributes")
-    public Response getBeanAttributes(@PathParam("beanName") PathSegment beanName) throws JMException {
-        ImmutableList.Builder<String> out = ImmutableList.builder();
-        for (MBeanAttributeInfo attributeInfo : beanInfo(beanName).getAttributes()) {
-            out.add(attributeInfo.getName());
-        }
-        return Response.ok(out.build()).build();
-    }
-
-    @GET
-    @Path("{beanName}/-info")
-    public Response getBeanInfo(@PathParam("beanName") PathSegment beanName) throws JMException {
-        return Response.ok(beanInfo(beanName)).build();
-    }
-
-    @GET
-    @Path("{beanName}/{attributeName:" + NON_META + "}/-info")
-    public Response getAttributeInfo(@PathParam("beanName") PathSegment beanName,
-            @PathParam("attributeName") String attributeName) throws JMException {
-        MBeanInfo beanInfo = beanInfo(beanName);
-        log.debug("get info for attribute {} of {}", attributeName, beanName);
-        MBeanAttributeInfo attributeInfo = findAttributeInfo(beanName, attributeName, beanInfo);
-        if (attributeInfo == null)
-            return Response.status(NOT_FOUND).build();
-        return Response.ok(attributeInfo).build();
-    }
-
-    private MBeanAttributeInfo findAttributeInfo(PathSegment beanName, String attributeName, MBeanInfo beanInfo) {
-        for (MBeanAttributeInfo attributeInfo : beanInfo.getAttributes()) {
-            if (attributeName.equals(attributeInfo.getName())) {
-                return attributeInfo;
-            }
-        }
-        return null;
-    }
-
-    @GET
-    @Path("{beanName}/{attributeName:" + NON_META + "}")
-    public Response getBeanAttributeByName(@PathParam("beanName") PathSegment beanName,
-            @PathParam("attributeName") String attributeName) throws JMException {
-        Object value = server.getAttribute(beanName(beanName), attributeName);
-        return Response.ok(value).build();
+        return ok(beanInfo(beanName).getDescription());
     }
 
     private MBeanInfo beanInfo(PathSegment pathSegment) throws JMException {
@@ -173,5 +129,107 @@ public class MBeanBrowser {
             beanName.append(key).append("=").append(matrix.getFirst(key));
         }
         return ObjectName.getInstance(beanName.toString());
+    }
+
+    @GET
+    @Path("{beanName}/-attributes")
+    public Response getBeanAttributes(@PathParam("beanName") PathSegment beanName) throws JMException {
+        ImmutableList.Builder<String> out = ImmutableList.builder();
+        for (MBeanAttributeInfo attributeInfo : beanInfo(beanName).getAttributes()) {
+            out.add(attributeInfo.getName());
+        }
+        return ok(out);
+    }
+
+    @GET
+    @Path("{beanName}/-info")
+    public Response getBeanInfo(@PathParam("beanName") PathSegment beanName) throws JMException {
+        return ok(beanInfo(beanName));
+    }
+
+    @GET
+    @Path("{beanName}/{attributeName:" + NON_META + "}/-info")
+    public Response getAttributeInfo(@PathParam("beanName") PathSegment beanName,
+            @PathParam("attributeName") String attributeName) throws JMException {
+        MBeanInfo beanInfo = beanInfo(beanName);
+        log.debug("get info for attribute {} of {}", attributeName, beanName);
+        MBeanAttributeInfo attributeInfo = findAttributeInfo(beanName, attributeName, beanInfo);
+        if (attributeInfo == null)
+            return notFound("bean " + beanName + " has not attribute " + attributeName);
+        return ok(attributeInfo);
+    }
+
+    private MBeanAttributeInfo findAttributeInfo(PathSegment beanName, String attributeName, MBeanInfo beanInfo) {
+        for (MBeanAttributeInfo attributeInfo : beanInfo.getAttributes()) {
+            if (attributeName.equals(attributeInfo.getName())) {
+                return attributeInfo;
+            }
+        }
+        return null;
+    }
+
+    @GET
+    @Path("{beanName}/{attributeName:" + NON_META + "}")
+    public Response getBeanAttributeByName(@PathParam("beanName") PathSegment beanName,
+            @PathParam("attributeName") String attributeName) throws JMException {
+        if (log.isDebugEnabled())
+            log.debug("get value of {}", findAttributeInfo(beanName, attributeName, beanInfo(beanName)));
+        Object value = attributeValue(beanName, attributeName);
+        if (value instanceof CompositeData[]) {
+            CompositeData[] compositeDatas = (CompositeData[]) value;
+            if (compositeDatas.length == 1)
+                return ok(compositeDatas[0].getCompositeType().keySet());
+            return ok(list(compositeDatas));
+        }
+        if (value instanceof CompositeData)
+            return ok(composite((CompositeData) value));
+        return ok(value);
+    }
+
+    private Object attributeValue(PathSegment beanName, String attributeName) throws JMException {
+        try {
+            return server.getAttribute(beanName(beanName), attributeName);
+        } catch (RuntimeException e) {
+            throw new ClientErrorException(badRequest("can't read the attribute '" + attributeName + "' from ["
+                    + beanName + "]: " + e));
+        }
+    }
+
+    private List<String> list(CompositeData[] array) {
+        ImmutableList.Builder<String> out = ImmutableList.builder();
+        for (CompositeData data : array) {
+            out.add(data.getCompositeType().keySet().toString());
+        }
+        return out.build();
+    }
+
+    private List<String> composite(CompositeData composite) {
+        ImmutableList.Builder<String> out = ImmutableList.builder();
+        for (Object key : composite.getCompositeType().keySet()) {
+            out.add(Objects.toString(key));
+        }
+        return out.build();
+    }
+
+    @GET
+    @Path("{beanName}/{attributeName:" + NON_META + "}/{elementName}")
+    public Response getAttributeElement( //
+            @PathParam("beanName") PathSegment beanName, //
+            @PathParam("attributeName") String attributeName, //
+            @PathParam("elementName") String elementName //
+    ) throws JMException {
+        Object value = attributeValue(beanName, attributeName);
+        log.debug("get {}/{}/{} -> {}", beanName, attributeName, elementName, value);
+        if (value instanceof CompositeData[]) {
+            CompositeData[] compositeDatas = (CompositeData[]) value;
+            if (compositeDatas.length == 1) {
+                return ok(compositeDatas[0].get(elementName));
+            }
+            return ok(list(compositeDatas));
+        }
+        if (value instanceof CompositeData) {
+            return ok(((CompositeData) value).get(elementName));
+        }
+        return ok(value);
     }
 }
