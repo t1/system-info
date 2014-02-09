@@ -1,7 +1,7 @@
 package com.github.t1.jms.browser;
 
 import static com.github.t1.jms.browser.MBeanBrowser.*;
-import static com.github.t1.jms.browser.RestTools.*;
+import static com.github.t1.jms.browser.Resource.*;
 import static javax.ws.rs.core.MediaType.*;
 
 import java.lang.management.ManagementFactory;
@@ -13,8 +13,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
 import org.slf4j.*;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Exposes MBeans with their attributes and meta data, but not (yet) notifications, operations, or constructors. Paths
@@ -44,11 +42,11 @@ public class MBeanBrowser {
 
     @GET
     public Response getDomains() throws JMException {
-        ImmutableList.Builder<String> out = ImmutableList.builder();
+        List<String> out = new ArrayList<>();
         for (String domain : server.getDomains()) {
             out.add(domain);
         }
-        return ok(out.build());
+        return ok(out);
     }
 
     @GET
@@ -71,14 +69,14 @@ public class MBeanBrowser {
 
     private List<String> queryDomains(String domain, MultivaluedMap<String, String> queryParameters)
             throws MalformedObjectNameException {
-        ImmutableList.Builder<String> out = ImmutableList.builder();
+        List<String> out = new ArrayList<>();
         String query = toMbeanQuery(queryParameters);
         log.debug("query {} for mbeans: {}", domain, query);
         ObjectName name = new ObjectName(domain + ":" + query);
         for (ObjectName objectName : server.queryNames(name, null)) {
             out.add(objectName.getKeyPropertyListString());
         }
-        return out.build();
+        return out;
     }
 
     private String toMbeanQuery(MultivaluedMap<String, String> urlQuery) {
@@ -134,7 +132,7 @@ public class MBeanBrowser {
     @GET
     @Path("{beanName}/-attributes")
     public Response getBeanAttributes(@PathParam("beanName") PathSegment beanName) throws JMException {
-        ImmutableList.Builder<String> out = ImmutableList.builder();
+        List<String> out = new ArrayList<>();
         for (MBeanAttributeInfo attributeInfo : beanInfo(beanName).getAttributes()) {
             out.add(attributeInfo.getName());
         }
@@ -196,19 +194,19 @@ public class MBeanBrowser {
     }
 
     private List<String> list(CompositeData[] array) {
-        ImmutableList.Builder<String> out = ImmutableList.builder();
+        List<String> out = new ArrayList<>();
         for (CompositeData data : array) {
             out.add(data.getCompositeType().keySet().toString());
         }
-        return out.build();
+        return out;
     }
 
     private List<String> composite(CompositeData composite) {
-        ImmutableList.Builder<String> out = ImmutableList.builder();
+        List<String> out = new ArrayList<>();
         for (Object key : composite.getCompositeType().keySet()) {
             out.add(Objects.toString(key));
         }
-        return out.build();
+        return out;
     }
 
     @GET

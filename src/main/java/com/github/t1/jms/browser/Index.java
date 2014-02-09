@@ -2,19 +2,14 @@ package com.github.t1.jms.browser;
 
 import static com.github.t1.jms.browser.JndiBrowser.*;
 import static com.github.t1.jms.browser.MBeanBrowser.*;
+import static com.github.t1.jms.browser.QueuesResource.*;
 import static com.github.t1.jms.browser.SystemPropertiesBrowser.*;
 import static javax.ws.rs.core.MediaType.*;
 
-import java.net.URI;
-
 import javax.ws.rs.*;
-import javax.ws.rs.core.UriInfo;
 
 @Path("/")
-public class Index {
-    @javax.ws.rs.core.Context
-    private UriInfo context;
-
+public class Index extends Resource {
     @GET
     @Produces(TEXT_HTML)
     public String index() {
@@ -24,17 +19,10 @@ public class Index {
 
         out.append("<tr><td>Server</td><td>").append(serverName()).append("</td></tr>\n");
 
-        out.append("<tr><td>System-Properties</td><td>");
-        link(out, SYSTEMPROPERTIES, "list");
-        out.append("</td></tr>\n");
-
-        out.append("<tr><td>jndi</td><td>");
-        link(out, JNDI, "root");
-        out.append("</td></tr>\n");
-
-        out.append("<tr><td>mbeans</td><td>");
-        link(out, MBEANS, "MBeans");
-        out.append("</td></tr>\n");
+        link(out, "System-Properties", SYSTEMPROPERTIES, "list");
+        link(out, "jndi", JNDI, "root");
+        link(out, "mbeans", MBEANS, "MBeans");
+        link(out, "queues", QUEUES, "Queues");
 
         out.append("</table></body></html>");
         return out.toString();
@@ -47,9 +35,11 @@ public class Index {
         return "unknown";
     }
 
-    private void link(StringBuilder out, String path, String txt) {
-        URI uri = context.resolve(URI.create("-system/" + path));
-        out.append("<a href=\"").append(uri).append("\">").append(txt).append("</a>");
+    private void link(StringBuilder out, String cellLabel, String path, String linkLabel) {
+        out.append("<tr>");
+        out.append("<td>").append(cellLabel).append("</td>");
+        out.append("<td>").append(link(path, linkLabel)).append("</td>");
+        out.append("</tr>\n");
     }
 
     @GET

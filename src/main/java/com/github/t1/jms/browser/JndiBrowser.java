@@ -1,11 +1,13 @@
 package com.github.t1.jms.browser;
 
+import static javax.ws.rs.core.MediaType.*;
+
 import java.lang.reflect.Proxy;
 import java.net.URI;
 
 import javax.naming.*;
 import javax.ws.rs.*;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 
 @Path(JndiBrowser.JNDI)
 public class JndiBrowser {
@@ -15,38 +17,42 @@ public class JndiBrowser {
     private UriInfo context;
 
     @GET
-    public String jndi() throws NamingException {
-        return listJndi("");
+    public Response jndi() throws NamingException {
+        return getJndi("");
     }
 
     @GET
     @Path("{name:.+}")
-    public String jndi(@PathParam("name") String name) throws NamingException {
-        return listJndi(name);
+    public Response jndi(@PathParam("name") String name) throws NamingException {
+        return getJndi(name);
     }
 
-    private String listJndi(String path) throws NamingException {
-        Context c = new InitialContext();
-        StringBuilder out = new StringBuilder();
-        out.append("<html><body>");
-        listJndi(out, c, path);
-        out.append("</body></html>");
-        return out.toString();
+    private Response getJndi(String path) throws NamingException {
+        javax.naming.Context context = new InitialContext();
+        Object object = context.lookup(path);
+        if (isSubContext(object)) {
+            StringBuilder out = new StringBuilder();
+            out.append("<html><body>");
+            listSubContext(out, context, path);
+            out.append("</body></html>");
+            return Response.ok(out.toString(), TEXT_HTML).build();
+        } else {
+            return Response.ok(object).build();
+        }
     }
 
-    private void listJndi(StringBuilder out, Context c, String path) throws NamingException {
+    private void listSubContext(StringBuilder out, javax.naming.Context context, String path) throws NamingException {
         out.append("<table>\n");
-        NamingEnumeration<Binding> list = c.listBindings(path);
+        NamingEnumeration<Binding> list = context.listBindings(path);
         while (list.hasMoreElements()) {
             Binding binding = list.nextElement();
             out.append("<tr><td>");
             out.append(binding.getName());
             out.append("</td><td>");
-            final Class<?> type = type(binding);
-            if (Context.class.isAssignableFrom(type)) {
-                link(out, "jndi/" + path + "/" + binding.getName(), "sub-list");
+            if (isSubContext(binding.getObject())) {
+                link(out, JNDI + "/" + path + "/" + binding.getName(), "sub-list");
             } else {
-                info(out, type);
+                info(out, binding.getObject().getClass());
                 out.append(":").append(binding.getObject());
                 if (Proxy.isProxyClass(binding.getObject().getClass()))
                     out.append("[*]");
@@ -56,15 +62,8 @@ public class JndiBrowser {
         out.append("</table>");
     }
 
-    private Class<?> type(NameClassPair pair) {
-        String className = pair.getClassName();
-        try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            return Class.forName(className, false, classLoader);
-        } catch (ClassNotFoundException e) {
-            System.out.println("class " + className + " -> not found");
-            return Object.class;
-        }
+    private boolean isSubContext(Object object) {
+        return javax.naming.Context.class.isAssignableFrom(object.getClass());
     }
 
     private void link(StringBuilder out, String path, String txt) {
