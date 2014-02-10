@@ -10,8 +10,6 @@ import javax.naming.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
-import org.joda.time.Instant;
-
 import com.github.t1.jms.browser.exceptions.MessageNotFoundException;
 
 @Path(QueuesResource.QUEUES)
@@ -104,29 +102,15 @@ public class QueuesResource extends Resource {
 
     @GET
     @Path("{queue}/{messageId}")
-    @Produces(TEXT_HTML)
-    public String message(@PathParam("queue") String queue, @PathParam("messageId") String messageId) {
-        StringBuilder out = new StringBuilder();
-        out.append("<html><head>\n");
-        out.append("</head><body>\n");
-        printMessage(queue, messageId, out);
-        out.append("</body></html>\n");
-        return out.toString();
+    public Response message(@PathParam("queue") String queueName, @PathParam("messageId") String messageId) {
+        Message message = getMessage(queueName, messageId);
+        return ok(message);
     }
 
-    private void printMessage(String queueName, String messageId, StringBuilder out) {
+    private Message getMessage(String queueName, String messageId) {
         try (Session session = createSession()) {
             Queue queue = session.createQueue(queueName);
-            out.append("<h4>Queue: " + queue.getQueueName() + "</h4>\n");
-            Message message = getMessage(session, queue, messageId);
-            out.append("<h5>" + messageId + "</h5>\n");
-            hr(out);
-            printHeader(message, out);
-            hr(out);
-            printProperties(message, out);
-            hr(out);
-            printBody(message, out);
-            hr(out);
+            return getMessage(session, queue, messageId);
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }
@@ -142,61 +126,5 @@ public class QueuesResource extends Resource {
             }
         }
         throw new MessageNotFoundException(messageId, queue.getQueueName());
-    }
-
-    private void printHeader(Message message, StringBuilder out) throws JMSException {
-        field("correlationId", message.getJMSCorrelationID(), out);
-        field("deliveryMode", message.getJMSDeliveryMode(), out);
-        field("deliveryTime", message.getJMSDeliveryTime(), out);
-        field("expiration", message.getJMSExpiration(), out);
-        field("priority", message.getJMSPriority(), out);
-        field("redelivered", message.getJMSRedelivered(), out);
-        field("replyTo", message.getJMSReplyTo(), out);
-        field("timestamp", new Instant(message.getJMSTimestamp()), out);
-        field("type", message.getJMSType(), out);
-    }
-
-    private void printProperties(Message message, StringBuilder out) throws JMSException {
-        @SuppressWarnings("unchecked")
-        Enumeration<String> names = message.getPropertyNames();
-        while (names.hasMoreElements()) {
-            String name = names.nextElement();
-            field(name, message.getStringProperty(name), out);
-        }
-    }
-
-    private void printBody(Message message, StringBuilder out) throws JMSException {
-        if (message instanceof BytesMessage) {
-            BytesMessage bytesMessage = (BytesMessage) message;
-            out.append("bytes: " + bytesMessage.getBodyLength());
-        } else if (message instanceof MapMessage) {
-            MapMessage mapMessage = (MapMessage) message;
-            @SuppressWarnings("unchecked")
-            Enumeration<String> names = mapMessage.getMapNames();
-            while (names.hasMoreElements()) {
-                String name = names.nextElement();
-                field(name, mapMessage.getString(name), out);
-            }
-        } else if (message instanceof ObjectMessage) {
-            ObjectMessage objectMessage = (ObjectMessage) message;
-            out.append("object: " + objectMessage.getObject());
-        } else if (message instanceof StreamMessage) {
-            out.append("stream");
-        } else if (message instanceof TextMessage) {
-            TextMessage textMessage = (TextMessage) message;
-            out.append(textMessage.getText());
-        } else {
-            out.append("unsupported message body type in ").append(message.getJMSMessageID());
-        }
-    }
-
-    private void hr(StringBuilder out) {
-        out.append("<hr/>\n");
-    }
-
-    private void field(String name, Object value, StringBuilder out) throws JMSException {
-        if (value != null) {
-            out.append(name).append(": ").append(value).append("<br/>\n");
-        }
     }
 }
