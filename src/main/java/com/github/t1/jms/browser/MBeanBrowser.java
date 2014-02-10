@@ -41,7 +41,7 @@ public class MBeanBrowser {
     MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
     @GET
-    public Response getDomains() throws JMException {
+    public Response getDomains() {
         List<String> out = new ArrayList<>();
         for (String domain : server.getDomains()) {
             out.add(domain);
@@ -51,7 +51,7 @@ public class MBeanBrowser {
 
     @GET
     @Produces(TEXT_PLAIN)
-    public Response getDomainsAsTextPlain() throws JMException {
+    public Response getDomainsAsTextPlain() {
         StringBuilder out = new StringBuilder();
         for (String domain : server.getDomains()) {
             out.append(domain).append("\n");
@@ -155,13 +155,13 @@ public class MBeanBrowser {
             @PathParam("attributeName") String attributeName) throws JMException {
         MBeanInfo beanInfo = beanInfo(beanName);
         log.debug("get info for attribute {} of {}", attributeName, beanName);
-        MBeanAttributeInfo attributeInfo = findAttributeInfo(beanName, attributeName, beanInfo);
+        MBeanAttributeInfo attributeInfo = findAttributeInfo(attributeName, beanInfo);
         if (attributeInfo == null)
             return notFound("bean " + beanName + " has not attribute " + attributeName);
         return Response.ok(attributeInfo).build();
     }
 
-    private MBeanAttributeInfo findAttributeInfo(PathSegment beanName, String attributeName, MBeanInfo beanInfo) {
+    private MBeanAttributeInfo findAttributeInfo(String attributeName, MBeanInfo beanInfo) {
         for (MBeanAttributeInfo attributeInfo : beanInfo.getAttributes()) {
             if (attributeName.equals(attributeInfo.getName())) {
                 return attributeInfo;
@@ -179,7 +179,7 @@ public class MBeanBrowser {
     public Response getBeanAttributeByName(@PathParam("beanName") PathSegment beanName,
             @PathParam("attributeName") String attributeName) throws JMException {
         if (log.isDebugEnabled())
-            log.debug("get value of {}", findAttributeInfo(beanName, attributeName, beanInfo(beanName)));
+            log.debug("get value of {}", findAttributeInfo(attributeName, beanInfo(beanName)));
         Object value = attributeValue(beanName, attributeName);
         if (value instanceof CompositeData[]) {
             CompositeData[] compositeDatas = (CompositeData[]) value;

@@ -20,10 +20,28 @@ public class JmsMessageHtmlBodyWriter extends AbstractMessageBodyWriter<Message>
     }
 
     @Override
+<<<<<<< HEAD
     protected void print(Message message, PrintWriter out) {
+=======
+    public long getSize(Message t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        return -1;
+    }
+
+    @Override
+    public void writeTo(Message message, Class<?> type, Type genericType, Annotation[] annotations,
+            MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) {
+        PrintWriter out = new PrintWriter(entityStream);
+        out.println("<html><head>");
+        out.println("</head><body>");
+        printMessage(message, out);
+        out.println("</body></html>");
+        out.flush();
+    }
+
+    private void printMessage(Message message, PrintWriter out) {
+>>>>>>> 51af75088586cbf7bba50491a8130ac58c419a9b
         try {
-            out.println("<h4>Queue: " + name(message.getJMSDestination()) + "</h4>");
-            out.println("<h5>" + message.getJMSMessageID() + "</h5>");
+            out.println("<h4>" + name(message.getJMSDestination()) + ": " + message.getJMSMessageID() + "</h4>");
             hr(out);
             printHeader(message, out);
             hr(out);
@@ -98,7 +116,7 @@ public class JmsMessageHtmlBodyWriter extends AbstractMessageBodyWriter<Message>
         }
     }
 
-    private void field(String name, Object value, PrintWriter out) throws JMSException {
+    private void field(String name, Object value, PrintWriter out) {
         if (value != null) {
             out.printf("<b>%s</b>: %s<br/>\n", name, value);
         }
