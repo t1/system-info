@@ -115,7 +115,7 @@ public class JmsMessageHtmlBodyWriter implements MessageBodyWriter<Message> {
         }
     }
 
-    private void field(String name, Object value, PrintWriter out) throws JMSException {
+    private void field(String name, Object value, PrintWriter out) {
         if (value != null) {
             out.printf("<b>%s</b>: %s<br/>\n", name, value);
         }

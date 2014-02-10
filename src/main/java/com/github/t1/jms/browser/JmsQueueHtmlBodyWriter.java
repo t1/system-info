@@ -7,7 +7,6 @@ import java.util.Enumeration;
 
 import javax.jms.*;
 import javax.naming.*;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.*;
 import javax.ws.rs.ext.MessageBodyWriter;
 
@@ -27,8 +26,7 @@ public class JmsQueueHtmlBodyWriter implements MessageBodyWriter<Queue> {
 
     @Override
     public void writeTo(Queue queue, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException,
-            WebApplicationException {
+            MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) {
         PrintWriter out = new PrintWriter(entityStream);
         out.println("<html><head>");
         out.println("</head><body>");
