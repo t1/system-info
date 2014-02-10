@@ -36,11 +36,9 @@ public class JmsMessageHtmlBodyWriter implements MessageBodyWriter<Message> {
         out.flush();
     }
 
-
     private void printMessage(Message message, PrintWriter out) {
         try {
-            out.println("<h4>Queue: " + name(message.getJMSDestination()) + "</h4>");
-            out.println("<h5>" + message.getJMSMessageID() + "</h5>");
+            out.println("<h4>" + name(message.getJMSDestination()) + ": " + message.getJMSMessageID() + "</h4>");
             hr(out);
             printHeader(message, out);
             hr(out);
