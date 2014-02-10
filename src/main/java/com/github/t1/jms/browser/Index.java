@@ -6,10 +6,21 @@ import static com.github.t1.jms.browser.QueuesResource.*;
 import static com.github.t1.jms.browser.SystemPropertiesBrowser.*;
 import static javax.ws.rs.core.MediaType.*;
 
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 
 @Path("/")
-public class Index extends Resource {
+public class Index {
+    @Context
+    @RequestScoped
+    @javax.enterprise.inject.Produces
+    UriInfo uriInfo;
+
+    @Inject
+    BasePath basePath;
+
     @GET
     @Produces(TEXT_HTML)
     public String index() {
@@ -38,7 +49,7 @@ public class Index extends Resource {
     private void link(StringBuilder out, String cellLabel, String path, String linkLabel) {
         out.append("<tr>");
         out.append("<td>").append(cellLabel).append("</td>");
-        out.append("<td>").append(link(path, linkLabel)).append("</td>");
+        out.append("<td>").append(basePath.link(path, linkLabel)).append("</td>");
         out.append("</tr>\n");
     }
 

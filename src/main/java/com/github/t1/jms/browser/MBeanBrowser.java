@@ -1,8 +1,8 @@
 package com.github.t1.jms.browser;
 
 import static com.github.t1.jms.browser.MBeanBrowser.*;
-import static com.github.t1.jms.browser.Resource.*;
 import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.Status.*;
 
 import java.lang.management.ManagementFactory;
 import java.util.*;
@@ -46,7 +46,7 @@ public class MBeanBrowser {
         for (String domain : server.getDomains()) {
             out.add(domain);
         }
-        return ok(out);
+        return Response.ok(out).build();
     }
 
     @GET
@@ -56,7 +56,7 @@ public class MBeanBrowser {
         for (String domain : server.getDomains()) {
             out.append(domain).append("\n");
         }
-        return ok(out.toString());
+        return Response.ok(out.toString()).build();
     }
 
     @GET
@@ -64,7 +64,11 @@ public class MBeanBrowser {
     public Response queryBeanNames(@PathParam("beanName") PathSegment beanName) throws JMException {
         if (!beanName.getMatrixParameters().isEmpty())
             return badRequest(BEAN_HELP);
-        return ok(queryDomains(beanName.getPath(), uri.getQueryParameters()));
+        return Response.ok(queryDomains(beanName.getPath(), uri.getQueryParameters())).build();
+    }
+
+    public static Response badRequest(String message) {
+        return Response.status(BAD_REQUEST).encoding(TEXT_PLAIN).entity(message).build();
     }
 
     private List<String> queryDomains(String domain, MultivaluedMap<String, String> queryParameters)
@@ -103,7 +107,7 @@ public class MBeanBrowser {
     @GET
     @Path("{beanName}/-description")
     public Response getBeanDescription(@PathParam("beanName") PathSegment beanName) throws JMException {
-        return ok(beanInfo(beanName).getDescription());
+        return Response.ok(beanInfo(beanName).getDescription()).build();
     }
 
     private MBeanInfo beanInfo(PathSegment pathSegment) throws JMException {
@@ -136,13 +140,13 @@ public class MBeanBrowser {
         for (MBeanAttributeInfo attributeInfo : beanInfo(beanName).getAttributes()) {
             out.add(attributeInfo.getName());
         }
-        return ok(out);
+        return Response.ok(out).build();
     }
 
     @GET
     @Path("{beanName}/-info")
     public Response getBeanInfo(@PathParam("beanName") PathSegment beanName) throws JMException {
-        return ok(beanInfo(beanName));
+        return Response.ok(beanInfo(beanName)).build();
     }
 
     @GET
@@ -154,7 +158,7 @@ public class MBeanBrowser {
         MBeanAttributeInfo attributeInfo = findAttributeInfo(beanName, attributeName, beanInfo);
         if (attributeInfo == null)
             return notFound("bean " + beanName + " has not attribute " + attributeName);
-        return ok(attributeInfo);
+        return Response.ok(attributeInfo).build();
     }
 
     private MBeanAttributeInfo findAttributeInfo(PathSegment beanName, String attributeName, MBeanInfo beanInfo) {
@@ -164,6 +168,10 @@ public class MBeanBrowser {
             }
         }
         return null;
+    }
+
+    public static Response notFound(String message) {
+        return Response.status(NOT_FOUND).encoding(TEXT_PLAIN).entity(message).build();
     }
 
     @GET
@@ -176,12 +184,12 @@ public class MBeanBrowser {
         if (value instanceof CompositeData[]) {
             CompositeData[] compositeDatas = (CompositeData[]) value;
             if (compositeDatas.length == 1)
-                return ok(compositeDatas[0].getCompositeType().keySet());
-            return ok(list(compositeDatas));
+                return Response.ok(compositeDatas[0].getCompositeType().keySet()).build();
+            return Response.ok(list(compositeDatas)).build();
         }
         if (value instanceof CompositeData)
-            return ok(composite((CompositeData) value));
-        return ok(value);
+            return Response.ok(composite((CompositeData) value)).build();
+        return Response.ok(value).build();
     }
 
     private Object attributeValue(PathSegment beanName, String attributeName) throws JMException {
@@ -221,13 +229,13 @@ public class MBeanBrowser {
         if (value instanceof CompositeData[]) {
             CompositeData[] compositeDatas = (CompositeData[]) value;
             if (compositeDatas.length == 1) {
-                return ok(compositeDatas[0].get(elementName));
+                return Response.ok(compositeDatas[0].get(elementName)).build();
             }
-            return ok(list(compositeDatas));
+            return Response.ok(list(compositeDatas)).build();
         }
         if (value instanceof CompositeData) {
-            return ok(((CompositeData) value).get(elementName));
+            return Response.ok(((CompositeData) value).get(elementName)).build();
         }
-        return ok(value);
+        return Response.ok(value).build();
     }
 }

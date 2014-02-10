@@ -1,7 +1,5 @@
 package com.github.t1.jms.browser;
 
-import static javax.ws.rs.core.MediaType.*;
-
 import java.util.*;
 
 import javax.jms.*;
@@ -13,26 +11,8 @@ import javax.ws.rs.core.Response;
 import com.github.t1.jms.browser.exceptions.MessageNotFoundException;
 
 @Path(QueuesResource.QUEUES)
-public class QueuesResource extends Resource {
+public class QueuesResource {
     public static final String QUEUES = "queues";
-
-    @GET
-    @Produces(TEXT_HTML)
-    public String queuesAsHtml() throws NamingException, JMSException {
-        StringBuilder out = new StringBuilder();
-        out.append("<html><head>\n");
-        out.append("</head><body><ul>\n");
-
-        for (Queue queue : scan("")) {
-            out.append("<li>");
-            String name = queue.getQueueName();
-            out.append(link(QUEUES + "/" + name, name));
-            out.append("</li>\n");
-        }
-
-        out.append("</ul></body></html>\n");
-        return out.toString();
-    }
 
     @GET
     public Response queues() throws NamingException {
@@ -65,27 +45,13 @@ public class QueuesResource extends Resource {
 
     @GET
     @Path("{queue}")
-    @Produces(TEXT_HTML)
-    public String queue(@PathParam("queue") String queue) {
-        StringBuilder out = new StringBuilder();
-        out.append("<html><head>\n");
-        out.append("</head><body>\n");
-        printQueue(queue, out);
-        out.append("</body></html>\n");
-        return out.toString();
+    public Response queue(@PathParam("queue") String queue) {
+        return Response.ok(getQueue(queue)).build();
     }
 
-    private void printQueue(String queueName, StringBuilder out) {
+    private Queue getQueue(String queueName) {
         try (Session session = createSession()) {
-            Queue queue = session.createQueue(queueName);
-            out.append("<h4>Queue: " + queue.getQueueName() + "</h4>\n");
-            @SuppressWarnings("unchecked")
-            Enumeration<Message> enumeration = session.createBrowser(queue).getEnumeration();
-            while (enumeration.hasMoreElements()) {
-                Message message = enumeration.nextElement();
-                out.append(link(QUEUES + "/" + queueName + "/" + message.getJMSMessageID(), message.toString()));
-                out.append("<br>\n");
-            }
+            return session.createQueue(queueName);
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }
@@ -104,7 +70,7 @@ public class QueuesResource extends Resource {
     @Path("{queue}/{messageId}")
     public Response message(@PathParam("queue") String queueName, @PathParam("messageId") String messageId) {
         Message message = getMessage(queueName, messageId);
-        return ok(message);
+        return Response.ok(message).build();
     }
 
     private Message getMessage(String queueName, String messageId) {

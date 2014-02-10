@@ -1,19 +1,18 @@
 package com.github.t1.jms.browser;
 
-import java.io.*;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Enumeration;
 
 import javax.jms.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.core.MediaType;
 
 import org.joda.time.Instant;
 
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
-public class JmsMessageHtmlBodyWriter implements MessageBodyWriter<Message> {
+public class JmsMessageHtmlBodyWriter extends AbstractMessageBodyWriter<Message> {
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -21,23 +20,7 @@ public class JmsMessageHtmlBodyWriter implements MessageBodyWriter<Message> {
     }
 
     @Override
-    public long getSize(Message t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return -1;
-    }
-
-    @Override
-    public void writeTo(Message message, Class<?> type, Type genericType, Annotation[] annotations,
-            MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) {
-        PrintWriter out = new PrintWriter(entityStream);
-        out.println("<html><head>");
-        out.println("</head><body>");
-        printMessage(message, out);
-        out.println("</body></html>");
-        out.flush();
-    }
-
-
-    private void printMessage(Message message, PrintWriter out) {
+    protected void print(Message message, PrintWriter out) {
         try {
             out.println("<h4>Queue: " + name(message.getJMSDestination()) + "</h4>");
             out.println("<h5>" + message.getJMSMessageID() + "</h5>");

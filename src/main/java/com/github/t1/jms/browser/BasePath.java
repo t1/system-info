@@ -1,26 +1,12 @@
 package com.github.t1.jms.browser;
 
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.Status.*;
-
 import java.net.URI;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.*;
 
-public class Resource {
-    public static Response ok(Object value) {
-        return Response.ok(value).build();
-    }
-
-    public static Response badRequest(String message) {
-        return Response.status(BAD_REQUEST).encoding(TEXT_PLAIN).entity(message).build();
-    }
-
-    public static Response notFound(String message) {
-        return Response.status(NOT_FOUND).encoding(TEXT_PLAIN).entity(message).build();
-    }
-
-    @Context
+public class BasePath {
+    @Inject
     private UriInfo uriInfo;
 
     public URI resolve(String path) {
