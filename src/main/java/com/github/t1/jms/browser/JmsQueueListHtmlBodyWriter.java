@@ -15,9 +15,8 @@ import javax.ws.rs.core.MediaType;
 public class JmsQueueListHtmlBodyWriter extends AbstractMessageBodyWriter<List<Queue>> {
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return List.class.isAssignableFrom(type);
+        return "java.util.List<javax.jms.Queue>".equals(genericType.toString());
     }
-
 
     @Override
     protected void print(List<Queue> list, PrintWriter out) {

@@ -46,17 +46,7 @@ public class MBeanBrowser {
         for (String domain : server.getDomains()) {
             out.add(domain);
         }
-        return Response.ok(out).build();
-    }
-
-    @GET
-    @Produces(TEXT_PLAIN)
-    public Response getDomainsAsTextPlain() {
-        StringBuilder out = new StringBuilder();
-        for (String domain : server.getDomains()) {
-            out.append(domain).append("\n");
-        }
-        return Response.ok(out.toString()).build();
+        return Response.ok(new GenericEntity<List<String>>(out) {}).build();
     }
 
     @GET

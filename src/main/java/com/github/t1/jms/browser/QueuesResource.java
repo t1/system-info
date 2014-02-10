@@ -6,7 +6,7 @@ import javax.jms.*;
 import javax.jms.Queue;
 import javax.naming.*;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 
 import com.github.t1.jms.browser.exceptions.MessageNotFoundException;
 
@@ -16,7 +16,7 @@ public class QueuesResource {
 
     @GET
     public Response queues() throws NamingException {
-        return Response.ok(scan("")).build();
+        return Response.ok(new GenericEntity<List<Queue>>(scan("")) {}).build();
     }
 
     private List<Queue> scan(String path) throws NamingException {
