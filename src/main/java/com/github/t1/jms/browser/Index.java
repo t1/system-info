@@ -28,7 +28,7 @@ public class Index {
 
     @GET
     public Response index() {
-        Map<String, Object> map = new TreeMap<>();
+        Map<String, Object> map = new LinkedHashMap<>();
         metaDataStore.put(map, new MapMetaData("System-Info Index", "Name", "Value"));
 
         map.put("server", serverName());

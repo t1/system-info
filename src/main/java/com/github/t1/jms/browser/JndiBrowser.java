@@ -22,9 +22,9 @@ public class JndiBrowser {
     }
 
     @GET
-    @Path("{name:.+}")
-    public Response jndi(@PathParam("name") String name) throws NamingException {
-        return getJndi(name);
+    @Path("{path:.+}")
+    public Response jndi(@PathParam("path") String path) throws NamingException {
+        return getJndi(path);
     }
 
     private Response getJndi(String path) throws NamingException {

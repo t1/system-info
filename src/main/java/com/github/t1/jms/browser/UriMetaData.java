@@ -1,6 +1,8 @@
 package com.github.t1.jms.browser;
 
-public class UriMetaData {
+import java.net.URI;
+
+public class UriMetaData implements MetaData<URI> {
     private final String title;
 
     public UriMetaData(String title) {

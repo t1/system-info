@@ -1,6 +1,8 @@
 package com.github.t1.jms.browser;
 
-public class MapMetaData {
+import java.util.Map;
+
+public class MapMetaData implements MetaData<Map<?, ?>> {
     private final String pageTitle;
     private final String keyTitle;
     private final String valueTitle;

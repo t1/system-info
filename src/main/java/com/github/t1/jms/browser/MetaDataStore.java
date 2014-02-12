@@ -9,11 +9,11 @@ public class MetaDataStore {
     private final Map<Object, Object> map = new IdentityHashMap<>();
 
     @SuppressWarnings("unchecked")
-    public <T> T get(Object key) {
-        return (T) map.get(key);
+    public <T, M extends MetaData<T>> M get(T key) {
+        return (M) map.get(key);
     }
 
-    public void put(Object key, Object value) {
+    public <T> void put(T key, MetaData<T> value) {
         map.put(key, value);
     }
 }
