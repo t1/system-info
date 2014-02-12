@@ -6,6 +6,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import com.github.t1.webresource.meta2.*;
+
 @Path(SystemPropertiesBrowser.SYSTEMPROPERTIES)
 public class SystemPropertiesBrowser {
     public static final String SYSTEMPROPERTIES = "system-properties";

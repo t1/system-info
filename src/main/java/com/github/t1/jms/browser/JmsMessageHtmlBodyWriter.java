@@ -10,6 +10,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.joda.time.Instant;
 
+import com.github.t1.webresource.meta2.AbstractHtmlMessageBodyWriter;
+
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
 public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Message> {

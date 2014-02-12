@@ -8,6 +8,8 @@ import javax.naming.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import com.github.t1.webresource.meta2.*;
+
 @Path(JndiBrowser.JNDI)
 public class JndiBrowser {
     public static final String JNDI = "jndi";

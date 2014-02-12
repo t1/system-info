@@ -7,6 +7,8 @@ import java.net.URI;
 import javax.inject.Inject;
 import javax.jms.*;
 
+import com.github.t1.webresource.meta2.*;
+
 public class JmsQueueAccessor implements Accessor<Queue> {
     @Inject
     private BasePath basePath;

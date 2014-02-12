@@ -8,19 +8,14 @@ import static com.github.t1.jms.browser.SystemPropertiesBrowser.*;
 import java.net.URI;
 import java.util.*;
 
-import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response;
+
+import com.github.t1.webresource.meta2.*;
 
 @Path("/")
 public class Index {
-    /** This producer is used for all other CDI beans as well, no matter which page is requested */
-    @Context
-    @RequestScoped
-    @javax.enterprise.inject.Produces
-    private UriInfo uriInfo;
-
     @Inject
     private BasePath basePath;
     @Inject
