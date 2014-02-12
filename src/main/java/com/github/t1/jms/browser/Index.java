@@ -49,7 +49,7 @@ public class Index {
     private void link(StringBuilder out, String cellLabel, String path, String linkLabel) {
         out.append("<tr>");
         out.append("<td>").append(cellLabel).append("</td>");
-        out.append("<td>").append(basePath.link(path, linkLabel)).append("</td>");
+        out.append("<td><a href=\"").append(basePath.resolve(path)).append("\">").append(linkLabel).append("</a></td>");
         out.append("</tr>\n");
     }
 

@@ -11,7 +11,7 @@ import javax.ws.rs.core.MediaType;
 
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
-public class HtmlListBodyWriter extends AbstractMessageBodyWriter<List<?>> {
+public class HtmlListBodyWriter extends AbstractHtmlMessageBodyWriter<List<?>> {
     @Inject
     Accessors accessors;
 

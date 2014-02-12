@@ -13,7 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
-public class JmsQueueHtmlBodyWriter extends AbstractMessageBodyWriter<Queue> {
+public class JmsQueueHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Queue> {
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return Queue.class.isAssignableFrom(type);
@@ -28,7 +28,7 @@ public class JmsQueueHtmlBodyWriter extends AbstractMessageBodyWriter<Queue> {
             Enumeration<Message> enumeration = session.createBrowser(queue).getEnumeration();
             while (enumeration.hasMoreElements()) {
                 Message message = enumeration.nextElement();
-                out.append(basePath.link(QUEUES + "/" + queueName + "/" + message.getJMSMessageID(), message.toString()));
+                out.append(link(QUEUES + "/" + queueName + "/" + message.getJMSMessageID(), message.toString()));
                 out.append("<br>\n");
             }
         } catch (JMSException e) {

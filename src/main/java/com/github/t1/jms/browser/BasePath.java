@@ -3,7 +3,7 @@ package com.github.t1.jms.browser;
 import java.net.URI;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.UriInfo;
 
 public class BasePath {
     @Inject
@@ -19,9 +19,5 @@ public class BasePath {
         if (!string.endsWith("/"))
             string = string + "/";
         return URI.create(string);
-    }
-
-    public String link(String path, String label) {
-        return "<a href=\"" + resolve(path) + "\">" + label + "</a>";
     }
 }

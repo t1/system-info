@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import javax.ws.rs.core.*;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-public abstract class AbstractMessageBodyWriter<T> implements MessageBodyWriter<T> {
+public abstract class AbstractHtmlMessageBodyWriter<T> implements MessageBodyWriter<T> {
     @Inject
     BasePath basePath;
 
@@ -29,4 +29,8 @@ public abstract class AbstractMessageBodyWriter<T> implements MessageBodyWriter<
     }
 
     protected abstract void print(T t, PrintWriter out);
+
+    public String link(String path, String label) {
+        return "<a href=\"" + basePath.resolve(path) + "\">" + label + "</a>";
+    }
 }

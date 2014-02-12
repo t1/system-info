@@ -12,7 +12,7 @@ import org.joda.time.Instant;
 
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
-public class JmsMessageHtmlBodyWriter extends AbstractMessageBodyWriter<Message> {
+public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Message> {
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
