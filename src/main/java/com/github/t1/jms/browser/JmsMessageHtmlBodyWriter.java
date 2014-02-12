@@ -20,15 +20,15 @@ public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Mess
     }
 
     @Override
-    protected void print(Message message, PrintWriter out) {
+    protected void printBody(Message message, PrintWriter out) {
         try {
             out.println("<h4>" + name(message.getJMSDestination()) + ": " + message.getJMSMessageID() + "</h4>");
             hr(out);
-            printHeader(message, out);
+            printMessageHeader(message, out);
             hr(out);
-            printProperties(message, out);
+            printMessageProperties(message, out);
             hr(out);
-            printBody(message, out);
+            printMessageBody(message, out);
             hr(out);
         } catch (JMSException e) {
             throw new RuntimeException(e);
@@ -51,7 +51,7 @@ public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Mess
         out.println("<hr/>");
     }
 
-    private void printHeader(Message message, PrintWriter out) throws JMSException {
+    private void printMessageHeader(Message message, PrintWriter out) throws JMSException {
         field("correlationId", message.getJMSCorrelationID(), out);
         field("deliveryMode", message.getJMSDeliveryMode(), out);
         field("deliveryTime", message.getJMSDeliveryTime(), out);
@@ -63,7 +63,7 @@ public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Mess
         field("type", message.getJMSType(), out);
     }
 
-    private void printProperties(Message message, PrintWriter out) throws JMSException {
+    private void printMessageProperties(Message message, PrintWriter out) throws JMSException {
         @SuppressWarnings("unchecked")
         Enumeration<String> names = message.getPropertyNames();
         while (names.hasMoreElements()) {
@@ -72,7 +72,7 @@ public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Mess
         }
     }
 
-    private void printBody(Message message, PrintWriter out) throws JMSException {
+    private void printMessageBody(Message message, PrintWriter out) throws JMSException {
         if (message instanceof BytesMessage) {
             BytesMessage bytesMessage = (BytesMessage) message;
             out.println("bytes: " + bytesMessage.getBodyLength());

@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 @javax.ws.rs.Produces("text/html")
 public class HtmlMapBodyWriter extends AbstractHtmlMessageBodyWriter<Map<?, ?>> {
     @Inject
-    Accessors accessors;
+    private MetaDataStore metaData;
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -20,16 +20,29 @@ public class HtmlMapBodyWriter extends AbstractHtmlMessageBodyWriter<Map<?, ?>> 
     }
 
     @Override
-    protected void print(Map<?, ?> map, PrintWriter out) {
-        out.println("<html><body><table>");
-        out.println("<tr><td>key</td><td>value</td></tr>");
-        for (Map.Entry<?, ?> property : map.entrySet()) {
+    protected void printBody(Map<?, ?> map, PrintWriter out) {
+        out.println("<table>");
+        MapMetaData meta = metaData.get(map);
+        printHeader(meta, out);
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
             out.print("<tr><td>");
-            out.print(property.getKey());
+            printItem(entry.getKey(), out);
             out.print("</td><td>");
-            out.print(property.getValue());
+            printItem(entry.getValue(), out);
             out.println("</td></tr>");
         }
-        out.println("</table></body></html>");
+        out.println("</table>");
+    }
+
+    private void printHeader(MapMetaData meta, PrintWriter out) {
+        String keyTitle = (meta == null) ? "Key" : meta.keyTitle();
+        String valueTitle = (meta == null) ? "Value" : meta.valueTitle();
+        out.append("<tr><td>").append(keyTitle).append("</td><td>").append(valueTitle).println("</td></tr>");
+    }
+
+    @Override
+    protected String title(Map<?, ?> map) {
+        MapMetaData meta = metaData.get(map);
+        return (meta == null) ? null : meta.pageTitle();
     }
 }

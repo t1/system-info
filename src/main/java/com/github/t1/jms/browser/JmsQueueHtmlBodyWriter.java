@@ -20,7 +20,7 @@ public class JmsQueueHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Queue>
     }
 
     @Override
-    protected void print(Queue queue, PrintWriter out) {
+    protected void printBody(Queue queue, PrintWriter out) {
         try (Session session = createSession()) {
             String queueName = queue.getQueueName();
             out.println("<h4>Queue: " + queueName + "</h4>");

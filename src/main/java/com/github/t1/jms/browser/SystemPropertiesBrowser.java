@@ -1,5 +1,8 @@
 package com.github.t1.jms.browser;
 
+import java.util.Properties;
+
+import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
@@ -7,8 +10,13 @@ import javax.ws.rs.core.Response;
 public class SystemPropertiesBrowser {
     public static final String SYSTEMPROPERTIES = "system-properties";
 
+    @Inject
+    private MetaDataStore metaData;
+
     @GET
     public Response systemProperties() {
-        return Response.ok(System.getProperties()).build();
+        Properties properties = System.getProperties();
+        metaData.put(properties, new MapMetaData("System Properties", "Name", "Value"));
+        return Response.ok(properties).build();
     }
 }

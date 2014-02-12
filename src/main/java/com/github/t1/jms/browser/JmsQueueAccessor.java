@@ -9,7 +9,7 @@ import javax.jms.*;
 
 public class JmsQueueAccessor implements Accessor<Queue> {
     @Inject
-    BasePath basePath;
+    private BasePath basePath;
 
     @Override
     public String title(Queue queue) {

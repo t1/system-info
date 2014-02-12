@@ -4,7 +4,9 @@ import static com.github.t1.jms.browser.JndiBrowser.*;
 import static com.github.t1.jms.browser.MBeanBrowser.*;
 import static com.github.t1.jms.browser.QueuesResource.*;
 import static com.github.t1.jms.browser.SystemPropertiesBrowser.*;
-import static javax.ws.rs.core.MediaType.*;
+
+import java.net.URI;
+import java.util.*;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -13,30 +15,29 @@ import javax.ws.rs.core.*;
 
 @Path("/")
 public class Index {
+    /** This producer is used for all other CDI beans as well, no matter which page is requested */
     @Context
     @RequestScoped
     @javax.enterprise.inject.Produces
-    UriInfo uriInfo;
+    private UriInfo uriInfo;
 
     @Inject
-    BasePath basePath;
+    private BasePath basePath;
+    @Inject
+    private MetaDataStore metaDataStore;
 
     @GET
-    @Produces(TEXT_HTML)
-    public String index() {
-        StringBuilder out = new StringBuilder();
-        out.append("<html><body><table>\n");
-        out.append("<tr><td>name</td><td>value</td></tr>\n");
+    public Response index() {
+        Map<String, Object> map = new TreeMap<>();
+        metaDataStore.put(map, new MapMetaData("System-Info Index", "Name", "Value"));
 
-        out.append("<tr><td>Server</td><td>").append(serverName()).append("</td></tr>\n");
+        map.put("server", serverName());
+        map.put("system-properties", link(SYSTEMPROPERTIES, "System-Properties"));
+        map.put("jndi", link(JNDI, "Root"));
+        map.put("mbeans", link(MBEANS, "MBeans"));
+        map.put("queues", link(QUEUES, "Queues"));
 
-        link(out, "System-Properties", SYSTEMPROPERTIES, "list");
-        link(out, "jndi", JNDI, "root");
-        link(out, "mbeans", MBEANS, "MBeans");
-        link(out, "queues", QUEUES, "Queues");
-
-        out.append("</table></body></html>");
-        return out.toString();
+        return Response.ok(map).build();
     }
 
     private String serverName() {
@@ -46,16 +47,9 @@ public class Index {
         return "unknown";
     }
 
-    private void link(StringBuilder out, String cellLabel, String path, String linkLabel) {
-        out.append("<tr>");
-        out.append("<td>").append(cellLabel).append("</td>");
-        out.append("<td><a href=\"").append(basePath.resolve(path)).append("\">").append(linkLabel).append("</a></td>");
-        out.append("</tr>\n");
-    }
-
-    @GET
-    @Path("/echo/{echo}")
-    public String echo(@PathParam("echo") String param) {
-        return param;
+    private URI link(String path, String title) {
+        URI uri = basePath.resolve(path);
+        metaDataStore.put(uri, new UriMetaData(title));
+        return uri;
     }
 }
