@@ -1,20 +1,21 @@
 package com.github.t1.jms.browser;
 
-import static javax.ws.rs.core.MediaType.*;
-
-import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.util.*;
 
+import javax.inject.Inject;
 import javax.naming.*;
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response;
 
 @Path(JndiBrowser.JNDI)
 public class JndiBrowser {
     public static final String JNDI = "jndi";
 
-    @javax.ws.rs.core.Context
-    private UriInfo context;
+    @Inject
+    private BasePath basePath;
+    @Inject
+    private MetaDataStore metaDataStore;
 
     @GET
     public Response jndi() throws NamingException {
@@ -31,59 +32,31 @@ public class JndiBrowser {
         javax.naming.Context context = new InitialContext();
         Object object = context.lookup(path);
         if (isSubContext(object)) {
-            StringBuilder out = new StringBuilder();
-            out.append("<html><body>");
-            listSubContext(out, context, path);
-            out.append("</body></html>");
-            return Response.ok(out.toString(), TEXT_HTML).build();
+            List<Object> out = listSubContext(context, path);
+            return Response.ok(out).build();
         } else {
             return Response.ok(object).build();
         }
-    }
-
-    private void listSubContext(StringBuilder out, javax.naming.Context context, String path) throws NamingException {
-        out.append("<table>\n");
-        NamingEnumeration<Binding> list = context.listBindings(path);
-        while (list.hasMoreElements()) {
-            Binding binding = list.nextElement();
-            out.append("<tr><td>");
-            out.append(binding.getName());
-            out.append("</td><td>");
-            if (isSubContext(binding.getObject())) {
-                link(out, JNDI + "/" + path + "/" + binding.getName(), "sub-list");
-            } else {
-                info(out, binding.getObject().getClass());
-                out.append(":").append(binding.getObject());
-                if (Proxy.isProxyClass(binding.getObject().getClass()))
-                    out.append("[*]");
-            }
-            out.append("</td></tr>\n");
-        }
-        out.append("</table>");
     }
 
     private boolean isSubContext(Object object) {
         return javax.naming.Context.class.isAssignableFrom(object.getClass());
     }
 
-    private void link(StringBuilder out, String path, String txt) {
-        out.append("<a href=\"").append(context.resolve(URI.create(path))).append("\">").append(txt).append("</a>");
+    private List<Object> listSubContext(javax.naming.Context context, String path) throws NamingException {
+        List<Object> out = new ArrayList<>();
+        NamingEnumeration<Binding> list = context.listBindings(path);
+        while (list.hasMoreElements()) {
+            Binding binding = list.nextElement();
+            out.add(link(path, binding));
+        }
+        return out;
     }
 
-    private void info(StringBuilder out, Class<?> t0) {
-        boolean first = true;
-        for (Class<?> t = t0; t != null && !Object.class.equals(t); t = t.getSuperclass()) {
-            if (first) {
-                first = false;
-            } else {
-                out.append(", ");
-            }
-            out.append(t.getName());
-            for (Class<?> i : t.getInterfaces()) {
-                out.append("&lt;");
-                info(out, i);
-                out.append("&gt;");
-            }
-        }
+    private URI link(String path, Binding binding) {
+        String name = binding.getName();
+        URI uri = basePath.resolve(JNDI + "/" + path + "/" + name);
+        metaDataStore.put(uri, new UriMetaData(name));
+        return uri;
     }
 }
