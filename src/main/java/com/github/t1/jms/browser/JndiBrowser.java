@@ -8,7 +8,8 @@ import javax.naming.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
-import com.github.t1.webresource.meta2.*;
+import com.github.t1.webresource.accessors.*;
+import com.github.t1.webresource.codec2.BasePath;
 
 @Path(JndiBrowser.JNDI)
 public class JndiBrowser {
@@ -34,8 +35,8 @@ public class JndiBrowser {
         javax.naming.Context context = new InitialContext();
         Object object = context.lookup(path);
         if (isSubContext(object)) {
-            List<Object> out = listSubContext(context, path);
-            return Response.ok(out).build();
+            List<Object> list = listSubContext(context, path);
+            return Response.ok(list).build();
         } else {
             return Response.ok(object).build();
         }
@@ -52,6 +53,7 @@ public class JndiBrowser {
             Binding binding = list.nextElement();
             out.add(link(path, binding));
         }
+        metaDataStore.put(out, new ListMetaData(path));
         return out;
     }
 

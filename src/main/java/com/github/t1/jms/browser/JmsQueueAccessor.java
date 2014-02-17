@@ -4,15 +4,11 @@ import static com.github.t1.jms.browser.QueuesResource.*;
 
 import java.net.URI;
 
-import javax.inject.Inject;
 import javax.jms.*;
 
-import com.github.t1.webresource.meta2.*;
+import com.github.t1.webresource.accessors.AbstractAccessor;
 
-public class JmsQueueAccessor implements Accessor<Queue> {
-    @Inject
-    private BasePath basePath;
-
+public class JmsQueueAccessor extends AbstractAccessor<Queue> {
     @Override
     public String title(Queue queue) {
         return name(queue);
@@ -20,7 +16,7 @@ public class JmsQueueAccessor implements Accessor<Queue> {
 
     @Override
     public URI link(Queue queue) {
-        return basePath.resolve(QUEUES + "/" + name(queue));
+        return resolve(QUEUES + "/" + name(queue));
     }
 
     private String name(Queue queue) {

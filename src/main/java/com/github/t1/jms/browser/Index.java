@@ -12,7 +12,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
-import com.github.t1.webresource.meta2.*;
+import com.github.t1.webresource.accessors.*;
+import com.github.t1.webresource.codec2.BasePath;
 
 @Path("/")
 public class Index {

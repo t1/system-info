@@ -11,7 +11,7 @@ import javax.jms.*;
 import javax.naming.*;
 import javax.ws.rs.core.MediaType;
 
-import com.github.t1.webresource.meta2.AbstractHtmlMessageBodyWriter;
+import com.github.t1.webresource.codec2.AbstractHtmlMessageBodyWriter;
 
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
