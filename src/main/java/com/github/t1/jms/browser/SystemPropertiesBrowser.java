@@ -7,6 +7,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import com.github.t1.log.Logged;
+import com.github.t1.webresource.accessors.*;
 import com.github.t1.webresource.codec2.BasePath;
 
 @Path(SystemPropertiesBrowser.SYSTEMPROPERTIES)
@@ -15,21 +17,28 @@ public class SystemPropertiesBrowser {
 
     @Inject
     private BasePath basePath;
+    @Inject
+    private MetaDataStore metaDataStore;
 
     @GET
     public Response listAll() {
         List<URI> list = new ArrayList<>();
+        metaDataStore.put(list, new ListMetaData("System Properties"));
         Properties properties = System.getProperties();
         for (String key : properties.stringPropertyNames()) {
-            list.add(basePath.resolve(key));
+            URI uri = basePath.resolve(SYSTEMPROPERTIES + "/" + key);
+            metaDataStore.put(uri, new UriMetaData(key));
+            list.add(uri);
         }
         return Response.ok(list).build();
     }
-    //
-    // @GET
-    // @Path("{name}")
-    // public Response get(@PathParam("name") String name) {
-    // String value = System.getProperty(name);
-    // return Response.ok(value).build();
-    // }
+
+    @GET
+    @Path("{name:.*}")
+    @Logged
+    public Response get(@PathParam("name") String name) {
+
+        String value = System.getProperty(name);
+        return Response.ok(value).build();
+    }
 }
