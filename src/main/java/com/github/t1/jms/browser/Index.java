@@ -1,9 +1,9 @@
 package com.github.t1.jms.browser;
 
-import static com.github.t1.jms.browser.JndiBrowser.*;
-import static com.github.t1.jms.browser.MBeanBrowser.*;
+import static com.github.t1.jms.browser.JndiResource.*;
+import static com.github.t1.jms.browser.MBeanResource.*;
 import static com.github.t1.jms.browser.QueuesResource.*;
-import static com.github.t1.jms.browser.SystemPropertiesBrowser.*;
+import static com.github.t1.jms.browser.SystemPropertiesResource.*;
 
 import java.net.URI;
 import java.util.*;

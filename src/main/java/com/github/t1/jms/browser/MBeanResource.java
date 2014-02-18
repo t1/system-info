@@ -1,6 +1,6 @@
 package com.github.t1.jms.browser;
 
-import static com.github.t1.jms.browser.MBeanBrowser.*;
+import static com.github.t1.jms.browser.MBeanResource.*;
 import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.Status.*;
 
@@ -19,7 +19,7 @@ import org.slf4j.*;
  * that refer to some meta data have path segment starting with a minus.
  */
 @Path(MBEANS)
-public class MBeanBrowser {
+public class MBeanResource {
     public static final String MBEANS = "mbeans";
 
     private static final String BEAN_HELP = "" //
@@ -33,7 +33,7 @@ public class MBeanBrowser {
 
     private static final String NON_META = "[^-/][^/]*";
 
-    private final Logger log = LoggerFactory.getLogger(MBeanBrowser.class);
+    private final Logger log = LoggerFactory.getLogger(MBeanResource.class);
 
     @javax.ws.rs.core.Context
     private UriInfo uri;

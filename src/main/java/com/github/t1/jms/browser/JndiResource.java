@@ -11,8 +11,8 @@ import javax.ws.rs.core.Response;
 import com.github.t1.webresource.accessors.*;
 import com.github.t1.webresource.codec2.BasePath;
 
-@Path(JndiBrowser.JNDI)
-public class JndiBrowser {
+@Path(JndiResource.JNDI)
+public class JndiResource {
     public static final String JNDI = "jndi";
 
     @Inject
