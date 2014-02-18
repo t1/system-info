@@ -2,41 +2,43 @@ package com.github.t1.jms.browser;
 
 import java.util.*;
 
+import javax.inject.Inject;
 import javax.jms.*;
 import javax.jms.Queue;
 import javax.naming.*;
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response;
 
 import com.github.t1.jms.browser.exceptions.MessageNotFoundException;
+import com.github.t1.webresource.accessors.*;
 
 @Path(QueuesResource.QUEUES)
 public class QueuesResource {
     public static final String QUEUES = "queues";
 
-    @GET
-    public Response queues() throws NamingException {
-        return Response.ok(new GenericEntity<List<Queue>>(scan("")) {}).build();
-    }
+    @Inject
+    MetaDataStore metaDataStore;
 
-    private List<Queue> scan(String path) throws NamingException {
+    @GET
+    public List<Queue> queues() throws NamingException {
         List<Queue> out = new ArrayList<>();
-        scan(out, path);
+        scanJndiForQueues(out, "");
+        metaDataStore.put(out, new ListMetaData("JMS Queues"));
         return out;
     }
 
-    private void scan(List<Queue> out, String path) throws NamingException {
+    private void scanJndiForQueues(List<Queue> out, String path) throws NamingException {
         InitialContext context = new InitialContext();
         Object resource = context.lookup(path);
         if (isSubContext(resource)) {
             NamingEnumeration<Binding> list = context.listBindings(path);
             while (list.hasMoreElements()) {
                 Binding binding = list.nextElement();
-                scan(out, path + "/" + binding.getName());
+                scanJndiForQueues(out, path + "/" + binding.getName());
             }
         } else if (resource instanceof Queue) {
             out.add((Queue) resource);
-        } // else ignore
+        } // else ignore Topics
     }
 
     private boolean isSubContext(Object object) {
@@ -45,11 +47,7 @@ public class QueuesResource {
 
     @GET
     @Path("{queue}")
-    public Response queue(@PathParam("queue") String queue) {
-        return Response.ok(getQueue(queue)).build();
-    }
-
-    private Queue getQueue(String queueName) {
+    public Queue queue(@PathParam("queue") String queueName) {
         try (Session session = createSession()) {
             return session.createQueue(queueName);
         } catch (JMSException e) {

@@ -10,12 +10,11 @@ import javax.ws.rs.core.MediaType;
 
 import org.joda.time.Instant;
 
-import com.github.t1.webresource.codec2.AbstractHtmlMessageBodyWriter;
+import com.github.t1.webresource.codec2.*;
 
 @javax.ws.rs.ext.Provider
 @javax.ws.rs.Produces("text/html")
 public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Message> {
-
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return Message.class.isAssignableFrom(type);
@@ -93,7 +92,7 @@ public class JmsMessageHtmlBodyWriter extends AbstractHtmlMessageBodyWriter<Mess
             out.println("stream");
         } else if (message instanceof TextMessage) {
             TextMessage textMessage = (TextMessage) message;
-            out.println(textMessage.getText());
+            new HtmlLiteralWriter(out).print(textMessage.getText());
         } else {
             out.println("unsupported message body type in " + message.getJMSMessageID());
         }
