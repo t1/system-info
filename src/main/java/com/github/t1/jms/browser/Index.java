@@ -12,10 +12,12 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import com.github.t1.log.Logged;
 import com.github.t1.webresource.accessors.*;
 import com.github.t1.webresource.codec2.BasePath;
 
 @Path("/")
+@Logged
 public class Index {
     @Inject
     private BasePath basePath;

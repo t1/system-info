@@ -8,9 +8,11 @@ import javax.naming.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import com.github.t1.log.Logged;
 import com.github.t1.webresource.accessors.*;
 import com.github.t1.webresource.codec2.BasePath;
 
+@Logged
 @Path(JndiResource.JNDI)
 public class JndiResource {
     public static final String JNDI = "jndi";

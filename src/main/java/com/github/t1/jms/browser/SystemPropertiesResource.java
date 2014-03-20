@@ -13,6 +13,7 @@ import com.github.t1.log.Logged;
 import com.github.t1.webresource.accessors.*;
 import com.github.t1.webresource.codec2.BasePath;
 
+@Logged
 @Path(SystemPropertiesResource.SYSTEMPROPERTIES)
 public class SystemPropertiesResource {
     private static final Logger logger = LoggerFactory.getLogger(SystemPropertiesResource.class);

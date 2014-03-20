@@ -14,10 +14,13 @@ import javax.ws.rs.core.*;
 
 import org.slf4j.*;
 
+import com.github.t1.log.Logged;
+
 /**
  * Exposes MBeans with their attributes and meta data, but not (yet) notifications, operations, or constructors. Paths
  * that refer to some meta data have path segment starting with a minus.
  */
+@Logged
 @Path(MBEANS)
 public class MBeanResource {
     public static final String MBEANS = "mbeans";

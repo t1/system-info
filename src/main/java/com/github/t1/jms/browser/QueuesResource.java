@@ -10,8 +10,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 import com.github.t1.jms.browser.exceptions.MessageNotFoundException;
+import com.github.t1.log.Logged;
 import com.github.t1.webresource.accessors.*;
 
+@Logged
 @Path(QueuesResource.QUEUES)
 public class QueuesResource {
     public static final String QUEUES = "queues";
