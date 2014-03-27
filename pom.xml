@@ -40,14 +40,6 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 					</archive>
-					<overlays>
-						<overlay>
-							<groupId>com.github.t1</groupId>
-							<artifactId>logging-interceptor</artifactId>
-							<type>jar</type>
-							<targetPath>WEB-INF/classes</targetPath>
-						</overlay>
-					</overlays>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -80,8 +72,7 @@
 		<dependency>
 			<groupId>com.github.t1</groupId>
 			<artifactId>logging-interceptor</artifactId>
-			<version>1.1</version>
-			<optional>true</optional><!-- overlay, so the interceptor is visible to CDI *grmbl* -->
+			<version>1.1.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
