@@ -5,8 +5,10 @@ import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import java.lang.management.ManagementFactory;
+import java.net.URI;
 import java.util.*;
 
+import javax.inject.Inject;
 import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.ws.rs.*;
@@ -15,6 +17,8 @@ import javax.ws.rs.core.*;
 import org.slf4j.*;
 
 import com.github.t1.log.Logged;
+import com.github.t1.webresource.accessors.*;
+import com.github.t1.webresource.codec2.BasePath;
 
 /**
  * Exposes MBeans with their attributes and meta data, but not (yet) notifications, operations, or constructors. Paths
@@ -38,6 +42,10 @@ public class MBeanResource {
 
     private final Logger log = LoggerFactory.getLogger(MBeanResource.class);
 
+    @Inject
+    private MetaDataStore metaDataStore;
+    @Inject
+    private BasePath basePath;
     @javax.ws.rs.core.Context
     private UriInfo uri;
 
@@ -45,11 +53,14 @@ public class MBeanResource {
 
     @GET
     public Response getDomains() {
-        List<String> out = new ArrayList<>();
+        List<URI> out = new ArrayList<>();
         for (String domain : server.getDomains()) {
-            out.add(domain);
+            URI uri = basePath.resolve(MBEANS + "/" + domain);
+            metaDataStore.put(uri, new UriMetaData(domain));
+            out.add(uri);
         }
-        return Response.ok(new GenericEntity<List<String>>(out) {}).build();
+        metaDataStore.put(out, new ListMetaData("JMS Queues"));
+        return Response.ok(new GenericEntity<List<URI>>(out) {}).build();
     }
 
     @GET

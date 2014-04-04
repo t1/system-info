@@ -19,7 +19,7 @@ public class QueuesResource {
     public static final String QUEUES = "queues";
 
     @Inject
-    MetaDataStore metaDataStore;
+    private MetaDataStore metaDataStore;
 
     @GET
     public List<Queue> queues() throws NamingException {
