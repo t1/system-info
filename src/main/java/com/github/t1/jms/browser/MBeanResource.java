@@ -148,10 +148,15 @@ public class MBeanResource {
     @GET
     @Path("{beanName}/-attributes")
     public Response getBeanAttributes(@PathParam("beanName") PathSegment beanName) throws JMException {
-        List<String> out = new ArrayList<>();
-        for (MBeanAttributeInfo attributeInfo : beanInfo(beanName).getAttributes()) {
-            out.add(attributeInfo.getName());
+        List<URI> out = new ArrayList<>();
+        MBeanInfo beanInfo = beanInfo(beanName);
+        for (MBeanAttributeInfo attributeInfo : beanInfo.getAttributes()) {
+            String name = attributeInfo.getName();
+            URI uri = basePath.resolve(MBEANS + "/" + beanName + "/" + name);
+            metaDataStore.put(uri, new UriMetaData(name));
+            out.add(uri);
         }
+        metaDataStore.put(out, new ListMetaData("MBeans " + beanName));
         return Response.ok(out).build();
     }
 
