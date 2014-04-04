@@ -47,7 +47,7 @@ public class MBeanResource {
     @Inject
     private BasePath basePath;
     @javax.ws.rs.core.Context
-    private UriInfo uri;
+    private UriInfo uriInfo;
 
     MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
@@ -59,7 +59,7 @@ public class MBeanResource {
             metaDataStore.put(uri, new UriMetaData(domain));
             out.add(uri);
         }
-        metaDataStore.put(out, new ListMetaData("JMS Queues"));
+        metaDataStore.put(out, new ListMetaData("MBean Domains"));
         return Response.ok(new GenericEntity<List<URI>>(out) {}).build();
     }
 
@@ -68,22 +68,26 @@ public class MBeanResource {
     public Response queryBeanNames(@PathParam("beanName") PathSegment beanName) throws JMException {
         if (!beanName.getMatrixParameters().isEmpty())
             return badRequest(BEAN_HELP);
-        return Response.ok(queryDomains(beanName.getPath(), uri.getQueryParameters())).build();
+        return Response.ok(queryDomains(beanName.getPath(), uriInfo.getQueryParameters())).build();
     }
 
     public static Response badRequest(String message) {
         return Response.status(BAD_REQUEST).encoding(TEXT_PLAIN).entity(message).build();
     }
 
-    private List<String> queryDomains(String domain, MultivaluedMap<String, String> queryParameters)
+    private List<URI> queryDomains(String domain, MultivaluedMap<String, String> queryParameters)
             throws MalformedObjectNameException {
-        List<String> out = new ArrayList<>();
+        List<URI> out = new ArrayList<>();
         String query = toMbeanQuery(queryParameters);
         log.debug("query {} for mbeans: {}", domain, query);
         ObjectName name = new ObjectName(domain + ":" + query);
         for (ObjectName objectName : server.queryNames(name, null)) {
-            out.add(objectName.getKeyPropertyListString());
+            String key = objectName.getKeyPropertyListString();
+            URI uri = basePath.resolve(MBEANS + "/" + domain + ";" + toUriKey(key) + "/-attributes");
+            metaDataStore.put(uri, new UriMetaData(key));
+            out.add(uri);
         }
+        metaDataStore.put(out, new ListMetaData("MBean Domain " + domain + ": " + query));
         return out;
     }
 
@@ -106,6 +110,10 @@ public class MBeanResource {
 
     private boolean isFullWildcard(String key, String value) {
         return "*".equals(key) && value.isEmpty();
+    }
+
+    private String toUriKey(String key) {
+        return key.replace(',', ';');
     }
 
     @GET
