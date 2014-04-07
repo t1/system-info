@@ -15,6 +15,18 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+    <scm>
+        <developerConnection>scm:git:https://github.com/t1/system-info</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <distributionManagement>
+        <repository>
+            <id>bintray-t1-javaee-helpers</id>
+            <name>t1-javaee-helpers-system-info</name>
+            <url>https://api.bintray.com/maven/t1/javaee-helpers/system-info</url>
+        </repository>
+    </distributionManagement>
+
 	<build>
 		<finalName>-system</finalName>
 		<plugins>
